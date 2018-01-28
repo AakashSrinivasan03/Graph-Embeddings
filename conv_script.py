@@ -1,21 +1,15 @@
 import os
 
-class Conversion:
-    def __init__(self):
-        pass
+ff = open("embedz_deep_test", 'w')
+i = 1
 
-    def converter(self, normal_embeddings_file, deep_embeddings_file, embed_dims):
+ff.write('2708' + ' ' + str(256) + '\n')
 
-        ff = open(deep_embeddings_file, 'w')
-        i = 0
+with open('embedz') as f:
+ content = f.readlines()
+ for strings in content:
+  strings=str(i)+' '+strings
+  ff.write(strings)
+  i+=1
 
-        ff.write('10312' + ' ' + str(embed_dims) + '\n')
-
-        with open(normal_embeddings_file) as f:
-            content = f.readlines()
-            for strings in content:
-                strings=str(i)+' '+strings
-                ff.write(strings)
-                i+=1
-
-        ff.close()
+ff.close()

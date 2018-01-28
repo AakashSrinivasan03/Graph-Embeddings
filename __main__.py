@@ -253,10 +253,14 @@ class OuterPropagation(object):
     def run_epoch(self, sess, data, learning_rate, summary_writer=None, epoch_id=0, verbose=1):
         if data == 'train':
             train_op = self.model.opt_op
+            train_op_pos = self.model.opt_op_pos
+            train_op_neg = self.model.opt_op_neg
             feed_dict = {self.placeholders['lr']: learning_rate,
                          self.placeholders['is_training']: True}
         else:
             train_op = tf.no_op()
+            train_op_neg = tf.no_op()
+            train_op_pos = tf.no_op()
             feed_dict = {self.placeholders['is_training']: False}
 
         # Start Running Queue
@@ -271,12 +275,22 @@ class OuterPropagation(object):
         _, _, _, total_steps = self.dataset.get_data(data)
 
         for step in range(total_steps):
-            # preds, labels, bd, loss, t_metrics = sess.run([self.test_predictions, self.data['targets'], self.data['batch_density'], self.model.ce_loss, self.model.metric_values])
-            bd, loss, pos_loss, neg_loss, _ = sess.run([self.data['batch_density'], self.model.loss, self.model.pos_loss, self.model.neg_loss, train_op], feed_dict=feed_dict)
+            #preds, labels, bd, loss, t_metrics = sess.run([self.test_predictions, self.data['targets'], self.data['batch_density'], self.model.ce_loss, self.model.metric_values])
+                        
+            bd, loss, pos_loss, neg_loss, hop_loss, _ = sess.run([self.data['batch_density'], self.model.loss, self.model.pos_loss, self.model.neg_loss, self.model.hop_loss[1:], train_op], feed_dict=feed_dict)
+            
+            #print('neg_loss')
+            #bd, loss, pos_loss, neg_loss, hop_loss, _ = sess.run([self.data['batch_density'], self.model.loss, self.model.pos_loss, self.model.neg_loss, self.model.hop_loss[1:], train_op_neg], feed_dict=feed_dict) 
+
+            #bd, loss, pos_loss, neg_loss, hop_loss, _ = sess.run([self.data['batch_density'], self.model.loss, self.model.pos_loss, self.model.neg_loss, self.model.hop_loss[1:], train_op], feed_dict=feed_dict)
+            #print('aaaay')
+            #_ = sess.run([train_op], feed_dict=feed_dict)
+            #_ = sess.run([train_op], feed_dict=feed_dict)
             contrib_ratio = bd
             metrics['loss'] += loss
             metrics['pos_loss'] += pos_loss
             metrics['neg_loss'] += neg_loss
+            metrics['hop_loss'] = hop_loss
 
         t.join()
 
@@ -301,7 +315,7 @@ class OuterPropagation(object):
             t_test = time.time()
             tr_metrics = self.run_epoch(sess, 'train', lr, summary_writers['train'], epoch_id=epoch_id)
 
-            print(epoch_id, tr_metrics['loss'], tr_metrics['pos_loss'], tr_metrics['neg_loss'], patience, round(time.time() - t_test, 5))
+            print(epoch_id, tr_metrics['loss'], tr_metrics['pos_loss'], tr_metrics['neg_loss'], tr_metrics['hop_loss'], patience, round(time.time() - t_test, 5))
 
             if epoch_id % self.config.val_epochs_freq == 0:
                 val_metrics = self.run_epoch(sess, 'val', 0, summary_writers['val'], epoch_id=epoch_id)

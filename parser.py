@@ -21,15 +21,15 @@ class Parser(object):  #
         ##parser.add_argument("--regKernel_residual", default=False, type=self.str2bool)
         ##parser.add_argument("--regKernel_metric_learning", default=False, type=self.str2bool)  # DNT
         parser.add_argument("--save_embeddings", default=False, help="save embeddings for unsupervised model", type=self.str2bool)
-        parser.add_argument("--loss_k_depth", default=5, help="number of hops to consider in loss term", type=int)
+        parser.add_argument("--loss_k_depth", default=3, help="number of hops to consider in loss term", type=int)
         parser.add_argument("--reg_weight", default=10, help="weight to regulariser", type=np.float32)
-        parser.add_argument("--max_depth", default=5, help="Maximum path depth", type=int)
-        parser.add_argument("--lambdas", default='0.2, 0.2, 0.2, 0.2, 0.2', help="Attention for each hop:Comma seperated")
+        parser.add_argument("--max_depth", default=3, help="Maximum path depth", type=int)
+        parser.add_argument("--lambdas", default='0.7,0.2,0.1', help="Attention for each hop:Comma seperated")
         parser.add_argument("--loss_fun_type", default='linear', help="linear or exponential loss function ?", choices=['linear', 'exponential'])
         parser.add_argument("--visualisation_directory", default='tensorboard_vis', help='directory to store data for visualisation')
         parser.add_argument("--embeddings_path", default='embedz', help='path to file with embeddings')
         parser.add_argument("--deep_embeddings_path", default='embedz_deep', help='path to file to store embeddings in deep embeddings format')
-        parser.add_argument("--normalise_pos", default='trace', help='normalise positive loss or not ?')
+        parser.add_argument("--normalise_pos", default='none', help='normalise positive loss or not ?')
         parser.add_argument("--normalise_neg", default='none', help='normalise negative loss or not ?')
         parser.add_argument('--laplacian', default='lk', help = 'lk or lpowerk')
 
@@ -63,7 +63,7 @@ class Parser(object):  #
         #parser.add_argument("--labels", default='labels_random', help="Label Sampling Type")
         parser.add_argument("--percents", default='10', help="Training percent comma separated, ex:5,10,20")
         parser.add_argument("--folds", default='1', help="Training folds comma separated")
-        parser.add_argument("--qcap", default='5', help="queue size", type=int)
+        parser.add_argument("--qcap", default='10', help="queue size", type=int)
         parser.add_argument("--embed_dims", default='256', help="dimensions in which to embed", type=int)
 
         # NN Hyper parameters

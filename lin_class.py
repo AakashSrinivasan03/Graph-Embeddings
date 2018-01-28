@@ -16,14 +16,14 @@ import pickle
 i=0
 macro_av=0
 micro_av=0
-c_=[50, 100, 500]
+c_=[10, 100, 1000]
 macro_values=np.zeros((9,len(c_)))
 micro_values=np.zeros((9,len(c_)))
 i_idx=0
 
 Dataset_X = np.genfromtxt('embedz', dtype=np.float32, delimiter=' ') #loading datasets
-Dataset_X =sklearn.preprocessing.normalize(Dataset_X, norm='l2', axis=1, copy=True)
-Dataset_Y=  np.reshape(np.argmax(np.load('labels.npy'), axis=1), (2708, 1)) 
+#Dataset_X =sklearn.preprocessing.normalize(Dataset_X, norm='l2', axis=1, copy=True)
+Dataset_Y=  np.reshape(np.argmax(np.load('../Datasets/cora/labels.npy'), axis=1), (2708, 1)) 
 
 
 for percentage in range(90,0,-10):

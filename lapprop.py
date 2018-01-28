@@ -26,26 +26,30 @@ class RegularizerPos():
         identity = tf.eye(n)
 
         adjmat_k = identity
-        reach_old = tf.diag(tf.ones([n]))
+        adjmat_k_ov = tf.diag(tf.ones([n]))
 
         loss = 0
 
+        hop_loss = []
+        hop_loss.append(0)
+
         for hop_perc in self.lambdas:
             adjmat_k = tf.matmul(adjmat_k, adjmat)
+            adjmat_k=tf.cast(tf.greater(adjmat_k, tf.zeros((n, n))), tf.float32)
+            compute_k = adjmat_k - adjmat_k_ov
+            adjmat_k_ov = adjmat_k_ov + adjmat_k
 
-            adjmat_k_ov = adjmat_k + reach_old
+            reach_k = tf.cast(tf.greater(compute_k, tf.zeros((n, n))), tf.float32)
 
-            reach_k = tf.cast(tf.greater(adjmat_k_ov, tf.zeros((n, n))), tf.float32)
+            #k_hops = reach_k - reach_old
 
-            k_hops = reach_k - reach_old
+            #reach_old = reach_k
 
-            reach_old = reach_k
-
-            d = tf.reduce_sum(k_hops, 1)
+            d = tf.reduce_sum(reach_k, 1)
 
             degree = tf.diag(d)
 
-            L_k = degree - k_hops
+            L_k = degree - reach_k
 
             R = L_k
 
@@ -71,6 +75,9 @@ class RegularizerPos():
             else:
                 print('YOU MESSED UP')
 
+            hop_loss.append(loss - hop_loss[-1])
+            hop_loss.append(loss)
+
         yt_d_y = tf.matmul(tf.matmul(tf.transpose(embeddings), degrees), embeddings)
 
         identity = tf.eye(self.embed_dims)
@@ -82,13 +89,13 @@ class RegularizerPos():
             reg_term = self.reg_weight * tf.sqrt(tf.reduce_sum(tf.square(yt_d_y - identity))) / tf.norm(degrees)
 
         elif self.loss_fun_type == 'linear' and self.normalise_neg == 'none':
-            reg_term = self.reg_weight * tf.reduce_mean(yt_d_y - identity)
+            reg_term = self.reg_weight * tf.abs(tf.norm(yt_d_y - identity))
 
         pos_term = loss
 
         loss += reg_term
 
-        return loss, pos_term, reg_term
+        return loss, pos_term, reg_term, hop_loss
 
     def call_lpowerk(self, inputs):
 
@@ -176,7 +183,7 @@ class Propagation:
 
         self.density = data['batch_density']
 
-        self.loss, self.pos_loss, self.neg_loss = self.add_regularizers(config, data)
+        self.loss, self.pos_loss, self.neg_loss, self.hop_loss = self.add_regularizers(config, data)
 
         variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
@@ -185,6 +192,18 @@ class Propagation:
                                   for grad, var in grads_and_vars]
         self.grad, _ = clipped_grads_and_vars[0]
         self.opt_op = self.optimizer.apply_gradients(clipped_grads_and_vars)
+
+        grads_and_vars = self.optimizer.compute_gradients(self.pos_loss)
+        clipped_grads_and_vars = [(tf.clip_by_value(grad, -5.0, 5.0) if grad is not None else None, var)
+                                  for grad, var in grads_and_vars]
+        self.grad, _ = clipped_grads_and_vars[0]
+        self.opt_op_pos = self.optimizer.apply_gradients(clipped_grads_and_vars)
+
+        grads_and_vars = self.optimizer.compute_gradients(self.neg_loss)
+        clipped_grads_and_vars = [(tf.clip_by_value(grad, -5.0, 5.0) if grad is not None else None, var)
+                                  for grad, var in grads_and_vars]
+        self.grad, _ = clipped_grads_and_vars[0] 
+        self.opt_op_neg = self.optimizer.apply_gradients(clipped_grads_and_vars)
 
     def add_regularizers(self, config, data):
         # if config.regKernel['metric_learning']:

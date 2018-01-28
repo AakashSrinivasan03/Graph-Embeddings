@@ -48,7 +48,7 @@ def call_lk(embeddings, adjmat, lambdas):
 
         print(degree)
 
-        print(np.trace(np.matmul(np.matmul(np.transpose(embeddings), R), embeddings)))
+        print(np.trace(np.matmul(np.matmul(np.transpose(embeddings), R), embeddings)) / np.trace(R))
 
     degree = np.array(np.sum(adjmat, 1)).squeeze()
 
@@ -60,7 +60,7 @@ def call_lk(embeddings, adjmat, lambdas):
     print(np.matmul(np.matmul(np.transpose(embeddings), digs), embeddings))
 
 
-call_lk(np.array([[0, 2, 3], [1, 4, 5], [2, 5,6], [3, 5, 6]]), np.mat([[0, 1, 0, 0], [1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0]]), [1])
+call_lk(np.array([[0, 2, 3], [1, 4, 5], [2, 5,6], [3, 5, 6]]), np.mat([[0, 1, 0, 0], [1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0]]), [1,1, 1, 1])
 
 kkk = tf.diag(tf.ones(5))
 
